@@ -1,0 +1,40 @@
+plugins {
+    id 'scala'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.scala-lang:scala-library:2.12.18'
+    
+    implementation 'org.apache.spark:spark-core_2.12:3.5.1'
+    implementation 'org.apache.spark:spark-sql_2.12:3.5.1'
+    implementation 'org.apache.hadoop:hadoop-aws:3.3.4'
+    
+    // These dependencies are marked as provided as they will be present in the Spark cluster
+    compileOnly 'org.apache.spark:spark-core_2.12:3.5.1'
+    compileOnly 'org.apache.spark:spark-sql_2.12:3.5.1'
+}
+
+shadowJar {
+    zip64 = true
+    mergeServiceFiles()
+    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
+    
+    // Relocate to avoid conflicts
+    relocate 'com.google', 'shadow.com.google'
+    relocate 'org.apache', 'shadow.org.apache'
+}
+
+tasks.withType(ScalaCompile) {
+    scalaCompileOptions.additionalParameters = ["-target:jvm-1.8"]
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'StudentFilterApp'
+    }
+}
